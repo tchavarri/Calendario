@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Calendario familiar</title><link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=Barlow:wght@400;600&family=Caveat:wght@600;700&display=swap" rel="stylesheet"><style id="css">
+/* VOICE: warm, family, a kitchen-wall calendar that happens to be digital.
+   IDEA: the Casaideas wall calendar: green month band, periwinkle weekday row, handwritten marker notes, stickers.
+   PICTURE: the month grid itself, filling the screen, readable from across the room.
+   COLOUR and TYPE: bottle green band, periwinkle row, white paper; marker inks; Barlow Condensed + Caveat handwriting.
+   LAYOUT: grid fills the screen; side column (today + shopping) in landscape, below in portrait. */
+:root{--bg:#e9ece8;--paper:#fff;--ink:#1f2a24;--grid:#3a4250;--muted:#6b756f;--green:#2f5e4b;--peri:#6d84d6;--soft:#f3f5f2;
+--c-morado:#7b2fa8;--c-verde:#1d8048;--c-azul:#1f5fbf;--c-rojo:#cf3434;--c-rosado:#d8508f;--c-celeste:#3a9bd0;--c-naranjo:#d8701f;--c-negro:#2b2b2b}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0f1412;--paper:#1a211d;--ink:#e7ece9;--grid:#3d4a44;--muted:#9aa69f;--green:#2b5644;--peri:#4d63b3;--soft:#202824;
+--c-morado:#c993f2;--c-verde:#6ad49a;--c-azul:#7fb0ff;--c-rojo:#ff8a85;--c-rosado:#ff94c4;--c-celeste:#7fd0f5;--c-naranjo:#ffb070;--c-negro:#dfe3e0}}
+:root[data-theme=dark]{--bg:#0f1412;--paper:#1a211d;--ink:#e7ece9;--grid:#3d4a44;--muted:#9aa69f;--green:#2b5644;--peri:#4d63b3;--soft:#202824;
+--c-morado:#c993f2;--c-verde:#6ad49a;--c-azul:#7fb0ff;--c-rojo:#ff8a85;--c-rosado:#ff94c4;--c-celeste:#7fd0f5;--c-naranjo:#ffb070;--c-negro:#dfe3e0}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 Barlow,system-ui,sans-serif;overflow-x:hidden;-webkit-text-size-adjust:100%}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+:focus-visible{outline:3px solid var(--peri);outline-offset:2px}
+.top{display:flex;align-items:center;background:var(--green);color:#fff;padding:10px max(3vw,12px)}
+.top h1{flex:1;margin:0;font:700 clamp(30px,5vw,48px)/1.05 "Barlow Condensed",sans-serif;text-transform:uppercase}
+.top h1 span{float:right;font-weight:500}
+.nav{width:48px;height:48px;border-radius:50%;border:2px solid rgba(255,255,255,.5);background:transparent;color:#fff;font-size:26px;line-height:1}
+.pill{min-height:44px;padding:0 16px;border-radius:22px;border:0;background:#fff;color:var(--green);font-weight:600}
+.sync{font-size:13px;opacity:.85;white-space:nowrap}
+.wrap{display:flex;flex-direction:column;padding:12px max(2vw,8px) 24px}
+.cal{display:flex;flex-direction:column;height:74vh;min-height:520px;background:var(--paper);border-radius:6px;padding:8px;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.dow,.grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));grid-gap:4px;gap:4px}
+.dow div{background:var(--peri);color:#fff;text-align:center;font:500 clamp(13px,1.9vw,19px)/2 "Barlow Condensed",sans-serif;overflow:hidden;white-space:nowrap}
+.grid{flex:1;grid-auto-rows:minmax(0,1fr);margin-top:6px}
+.cell{position:relative;display:block;text-align:left;background:var(--paper);border:1.5px solid var(--grid);border-radius:2px;padding:4px 5px;overflow:hidden}
+.cell.pad{border-color:transparent;background:transparent}
+.cell.we{background:var(--soft)}
+.cell.today{box-shadow:inset 0 0 0 3px var(--green)}
+.cell.today .num{background:var(--green);color:#fff;border-radius:4px;padding:0 4px}
+.num{display:inline-block;font:500 15px/1.3 "Barlow Condensed",sans-serif;color:var(--muted)}
+.ev{display:block;margin-top:2px}
+.ln{display:block;font:700 clamp(14px,2.1vw,19px)/1.08 Caveat,cursive;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ln b{font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:.85em}
+.done{text-decoration:line-through;opacity:.55}
+.stk{display:inline-block;max-width:100%;padding:1px 6px;margin:1px 0;border-radius:3px;font:500 12px/1.4 "Barlow Condensed",sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle}
+.c-morado{color:var(--c-morado)}.c-verde{color:var(--c-verde)}.c-azul{color:var(--c-azul)}.c-rojo{color:var(--c-rojo)}.c-rosado{color:var(--c-rosado)}.c-celeste{color:var(--c-celeste)}.c-naranjo{color:var(--c-naranjo)}.c-negro{color:var(--c-negro)}
+.side{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));grid-gap:14px;gap:14px;align-content:start}
+.card{background:var(--paper);border-radius:6px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.card h2{margin:0 0 8px;font:700 24px/1.1 "Barlow Condensed",sans-serif;color:var(--green)}
+:root[data-theme=dark] .card h2{color:#8fd1b0}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]) .card h2{color:#8fd1b0}}
+.card h3{margin:12px 0 4px;font:600 15px/1.2 Barlow,sans-serif;color:var(--muted)}
+.card ul{list-style:none;margin:0;padding:0}
+.agenda li{padding:3px 0}
+.agenda .ln{white-space:normal;font-size:22px}
+.empty{color:var(--muted)}
+.buy li button{display:flex;align-items:center;width:100%;min-height:44px;border:0;background:none;text-align:left;font:700 22px/1.1 Caveat,cursive;color:var(--c-morado)}
+.buy .box{flex:none;width:24px;height:24px;border:2px solid currentColor;border-radius:4px;font:700 16px/20px Barlow,sans-serif;text-align:center}
+.addrow{display:flex;margin-bottom:6px}
+.addrow input,.sheet input{flex:1;min-height:44px;font-size:16px;padding:8px 10px;border:1.5px solid var(--grid);border-radius:6px;background:var(--paper)}
+.primary{min-height:44px;padding:0 18px;border:0;border-radius:6px;background:var(--green);color:#fff;font-weight:600}
+.ghost,.link{min-height:44px;padding:0 14px;border:1.5px solid var(--grid);border-radius:6px;background:none}
+.link{margin-top:8px;font-size:14px;color:var(--muted)}
+.ov{position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(10,20,15,.45);display:flex;align-items:center;justify-content:center;padding:12px;z-index:9}
+.ov[hidden]{display:none}
+.sheet{width:100%;max-width:560px;max-height:92vh;overflow:auto;background:var(--paper);border-radius:10px;padding:16px 18px 20px}
+.sh-h{display:flex;align-items:center}
+.sh-h h2{flex:1;margin:0;font:700 28px/1.1 "Barlow Condensed",sans-serif;color:var(--green)}
+.x{width:44px;height:44px;border:0;border-radius:50%;background:var(--soft);font-size:18px}
+.dlist{list-style:none;padding:0;margin:12px 0}
+.dlist li{display:flex;align-items:center;padding:4px 0;border-bottom:1px dashed var(--grid)}
+.dlist .et{flex:1;min-height:44px;text-align:left;border:0;background:none;padding:2px 0}
+.dlist .et .ln{white-space:normal;font-size:23px}
+.chk{flex:none;width:36px;height:36px;border-radius:50%;border:2px solid var(--grid);background:none;color:transparent;font-weight:700}
+.chk.on{background:var(--green);border-color:var(--green);color:#fff}
+.del{flex:none;min-height:36px;padding:0 10px;border:0;border-radius:6px;background:var(--soft);font-size:14px;color:var(--c-rojo)}
+.lab{margin:12px 0 6px;font-size:14px;font-weight:600;color:var(--muted)}
+.f2{display:flex;align-items:flex-end}
+.f2 label{display:flex;flex-direction:column;font-size:14px;font-weight:600;color:var(--muted)}
+.f2 label:first-child{flex:1}
+.f2 input[type=time]{width:120px}
+.dots{display:flex;flex-wrap:wrap;margin:-4px}
+.dot{width:40px;height:40px;border-radius:50%;border:3px solid transparent;background:currentColor}
+.dot.sel{border-color:var(--paper);box-shadow:0 0 0 3px currentColor}
+.stks{display:flex;flex-wrap:wrap;margin:-3px}
+.stks button{border:2px solid transparent;font-size:15px;padding:6px 10px;border-radius:5px;min-height:38px}
+.stks button.sel{border-color:var(--ink);box-shadow:0 0 0 2px var(--paper) inset}
+.stks .none{background:var(--soft);color:var(--ink)}
+.row{display:flex;margin-top:16px}
+@media (min-width:900px) and (orientation:landscape){.wrap .side{margin:0 0 0 14px}.wrap{flex-direction:row;height:calc(100vh - 68px)}.cal{flex:1;height:auto}.side{width:300px;flex:none;grid-template-columns:1fr;overflow:auto}}
+@media (max-width:600px){.cal{height:auto;min-height:0;padding:4px}.grid{grid-auto-rows:84px;grid-gap:2px;gap:2px}.dow{grid-gap:2px;gap:2px}.cell{padding:2px 3px}.ln{font-size:13px}.stk{font-size:10px;padding:0 3px}.top h1 span{display:none}.sync{display:none}}
+.top>*+*{margin-left:10px}.side{margin-top:14px}.buy .box{margin-right:10px}.addrow>*+*{margin-left:8px}.sh-h>*+*,.dlist li>*+*{margin-left:8px}.f2>*+*,.row>*+*{margin-left:10px}.dots>*{margin:4px}.stks>*{margin:3px}
+.backup{width:100%;min-height:140px;font:13px/1.4 monospace;padding:8px;border:1.5px solid var(--grid);border-radius:6px;background:var(--paper);color:var(--ink)}
+.note{font-size:14px;color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(16px);opacity:0}}}
+</style></head><body><div id="app"></div><div id="modal" class="ov" hidden></div><script type="application/json" id="state">{"ev":[
+{"id":"e1","d":"2026-11-02","t":"Guía N.S. Patrimonio c/foto impresa","c":"morado"},
+{"id":"e2","d":"2026-11-02","t":"7 nov se entrega","c":"negro"},
+{"id":"e3","d":"2026-11-03","t":"Ev. Mat","c":"morado"},
+{"id":"e4","d":"2026-11-03","t":"Ev. Inglés","c":"morado"},
+{"id":"e5","d":"2026-11-03","t":"Imprimir exámenes Ochi","c":"morado","x":true},
+{"id":"e6","d":"2026-11-04","t":"Lectura","c":"morado"},
+{"id":"e7","d":"2026-11-04","t":"Cosa running Tomi","c":"verde"},
+{"id":"e8","d":"2026-11-04","t":"Junta Steven","c":"morado"},
+{"id":"e9","d":"2026-11-04","t":"Ropero 132","c":"verde"},
+{"id":"e10","d":"2026-11-05","t":"Quiz Inglés","c":"morado"},
+{"id":"e11","d":"2026-11-06","t":"Chivato","c":"rosado"},
+{"id":"e12","d":"2026-11-06","t":"90 años Old Georgians","c":"morado"},
+{"id":"e13","d":"2026-11-06","t":"Carrot cake Stephi","c":"verde"},
+{"id":"e14","d":"2026-11-06","t":"Salen","h":"13:20","c":"morado"},
+{"id":"e15","d":"2026-11-07","t":"KKA","c":"rosado"},
+{"id":"e16","d":"2026-11-08","t":"KKA","c":"rosado"},
+{"id":"e17","d":"2026-11-10","t":"Cumple Nené","c":"celeste"},
+{"id":"e18","d":"2026-11-10","t":"Ev. lenguaje: noticia","c":"morado"},
+{"id":"e19","d":"2026-11-11","t":"Lectura","c":"verde"},
+{"id":"e20","d":"2026-11-11","t":"Cuaderno rojo","c":"verde"},
+{"id":"e21","d":"2026-11-11","t":"Preguntas Steven","c":"verde"},
+{"id":"e22","d":"2026-11-11","t":"Ropero 132","c":"verde"},
+{"id":"e23","d":"2026-11-12","t":"Cumple Coni","c":"celeste"},
+{"id":"e24","d":"2026-11-13","t":"Sin clases · Graduación 12°","c":"morado"},
+{"id":"e25","d":"2026-11-13","t":"Queques, sanguchitos, piñata, sorpresas","c":"verde"},
+{"id":"e26","d":"2026-11-14","t":"Cumple Franco y Elo","c":"morado"},
+{"id":"e27","d":"2026-11-14","t":"Congreso internacional de educación","c":"morado"},
+{"id":"e28","d":"2026-11-15","t":"½ maratón Fedachi","c":"azul"},
+{"id":"e29","d":"2026-11-15","t":"Curacaví","c":"morado"},
+{"id":"e30","d":"2026-11-16","t":"Cumple Titi","c":"celeste"},
+{"id":"e31","d":"2026-11-17","t":"Copa Elo","c":"morado"},
+{"id":"e32","d":"2026-11-18","t":"Celebración misses","c":"morado"},
+{"id":"e33","d":"2026-11-18","t":"Lectura","c":"morado"},
+{"id":"e34","d":"2026-11-18","t":"Cuaderno rojo","c":"morado"},
+{"id":"e35","d":"2026-11-19","t":"Cumple Miss Marce","c":"rojo","s":"cumple"},
+{"id":"e36","d":"2026-11-19","t":"Elo ♥","c":"azul"},
+{"id":"e37","d":"2026-11-20","t":"Cumple Miss Cata","c":"rojo"},
+{"id":"e38","d":"2026-11-20","t":"Juguete favorito Elo","c":"morado"},
+{"id":"e39","d":"2026-11-20","t":"Musical Rey León","c":"morado"},
+{"id":"e40","d":"2026-11-21","t":"Clase","h":"09:00","c":"negro"},
+{"id":"e41","d":"2026-11-21","t":"Paseo curso Santi (casa Sol)","c":"azul","s":"paseo"},
+{"id":"e42","d":"2026-11-21","t":"Bi.Ba.","c":"morado"},
+{"id":"e43","d":"2026-11-23","t":"Virgen peregrina","c":"azul"},
+{"id":"e44","d":"2026-11-24","t":"Último día pre-sport","c":"azul"},
+{"id":"e45","d":"2026-11-24","t":"Aeropuerto","h":"10:45","c":"azul"},
+{"id":"e46","d":"2026-11-25","t":"Dermatóloga","h":"14:45","c":"morado"},
+{"id":"e47","d":"2026-11-26","t":"Mini MasterChef","c":"morado"},
+{"id":"e48","d":"2026-11-26","t":"T. voz Max Meds","c":"negro","s":"doctor"},
+{"id":"e49","d":"2026-11-27","t":"Cumple Marta","c":"rojo"},
+{"id":"e50","d":"2026-11-27","t":"Entrega encuesta Impulso","c":"azul"},
+{"id":"e51","d":"2026-11-27","t":"Fiesta 20 años egresados","c":"morado"},
+{"id":"e52","d":"2026-11-30","t":"Límite pago matrícula","h":"13:20","c":"rojo","s":"pagos"}
+],"buy":[
+{"id":"b1","t":"Harina","x":true},{"id":"b2","t":"Aceite","x":true},{"id":"b3","t":"Yogurt","x":true},{"id":"b4","t":"Azúcar","x":true},
+{"id":"b5","t":"Polvos de hornear","x":true},{"id":"b6","t":"Quix","x":true},{"id":"b7","t":"Detergente ropa","x":true},{"id":"b8","t":"Piña en conserva","x":true},
+{"id":"b9","t":"Jabón","x":true},{"id":"b10","t":"Shampoo","x":true},{"id":"b11","t":"Rulo de acero","x":true},{"id":"b12","t":"Harina"}
+]}</script><script id="main">{
+const MES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DOW=['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+const DJS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+const COL=[['morado','Morado'],['verde','Verde'],['azul','Azul'],['rojo','Rojo'],['rosado','Rosado'],['celeste','Celeste'],['naranjo','Naranjo'],['negro','Negro']];
+const ST={cumple:['Cumpleaños','#4b3aa8','#fff'],doctor:['Doctor','#8fa8e0','#1d2a55'],dentista:['Dentista','#a9b8e8','#1d2a55'],pagos:['Pagos','#7a1f2b','#fff'],paseo:['Paseo de curso','#d9673a','#fff'],prueba:['Prueba','#b8d4dc','#2a3f8f'],entrega:['Entrega','#3d5c4c','#fff'],lectura:['Control de lectura','#1e2b26','#fff'],reunion:['Reunión','#8e9726','#fff'],fiesta:['¡Fiesta!','#d9673a','#fff'],celebracion:['Celebración','#2a2f8a','#fff'],feriado:['Feriado','#a8e0c4','#1d3b2c'],compras:['Compras','#3a2f9a','#fff'],tramites:['Trámites','#24382c','#fff'],viaje:['Viaje','#e07a4e','#fff'],evento:['Evento','#c3a3e0','#3b2160'],importante:['Importante','#c0392b','#fff'],pendiente:['Pendiente','#d7a6d6','#4a1d4a'],salida:['Salida','#3a3aa0','#fff'],vacaciones:['Vacaciones','#d4e04a','#2c3a10'],libre:['Día libre','#4b3ad0','#fff'],amigos:['Junta amigos','#b8c0ee','#2a2f6a'],cine:['Cine','#8f2a2f','#fff']};
+const app=document.getElementById('app'),modal=document.getElementById('modal');
+let S=JSON.parse(document.getElementById('state').textContent);
+let day=null,editId=null,selC='morado',selS='';
+const esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>(n<10?'0':'')+n;
+const key=(y,m,d)=>y+'-'+pad(m+1)+'-'+pad(d);
+const todayK=()=>{const t=new Date();return key(t.getFullYear(),t.getMonth(),t.getDate())};
+const col=c=>COL.some(x=>x[0]===c)?c:'morado';
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+let view;try{view=JSON.parse(sessionStorage.getItem('calfam-view')||'null')}catch(e){}
+if(!view){const t=new Date();view={y:t.getFullYear(),m:t.getMonth()}}
+function evsOf(k){return S.ev.filter(e=>e.d===k).sort((a,b)=>(a.h?0:1)-(b.h?0:1)||String(a.h||'').localeCompare(String(b.h||'')))}
+function stk(s){const v=ST[s];return v?'<span class="stk" style="background:'+v[1]+';color:'+v[2]+'">'+v[0]+'</span>':''}
+function line(e){return (e.s?stk(e.s):'')+((e.t||e.h)?'<span class="ln c-'+col(e.c)+(e.x?' done':'')+'">'+(e.h?'<b>'+esc(e.h)+'</b> ':'')+esc(e.t)+'</span>':'')}
+function fecha(k){const p=k.split('-'),d=new Date(+p[0],+p[1]-1,+p[2]);return DJS[d.getDay()]+' '+d.getDate()+' de '+MES[d.getMonth()].toLowerCase()}
+function render(){
+  const y=view.y,m=view.m,first=(new Date(y,m,1).getDay()+6)%7,n=new Date(y,m+1,0).getDate(),tk=todayK();
+  let cells='';
+  for(let i=0;i<first;i++)cells+='<div class="cell pad"></div>';
+  for(let d=1;d<=n;d++){const k=key(y,m,d),wd=(first+d-1)%7;
+    cells+='<button class="cell'+(wd>4?' we':'')+(k===tk?' today':'')+'" data-a="open" data-d="'+k+'" aria-label="'+fecha(k)+'"><span class="num">'+pad(d)+'</span><span class="ev">'+evsOf(k).map(line).join('')+'</span></button>'}
+  const tot=Math.ceil((first+n)/7)*7;for(let i=first+n;i<tot;i++)cells+='<div class="cell pad"></div>';
+  const t=new Date(),tm=new Date(t.getFullYear(),t.getMonth(),t.getDate()+1),mk=key(tm.getFullYear(),tm.getMonth(),tm.getDate());
+  const ag=k=>{const l=evsOf(k);return l.length?l.map(e=>'<li>'+line(e)+'</li>').join(''):'<li class="empty">Nada anotado.</li>'};
+  app.innerHTML='<header class="top"><button class="nav" data-a="prev" aria-label="Mes anterior">‹</button><h1>'+MES[m]+'<span>·'+y+'·</span></h1><button class="nav" data-a="next" aria-label="Mes siguiente">›</button><button class="pill" data-a="hoy">Hoy</button></header>'+
+  '<main class="wrap"><section class="cal" aria-label="Calendario del mes"><div class="dow">'+DOW.map(d=>'<div>'+d+'</div>').join('')+'</div><div class="grid">'+cells+'</div></section>'+
+  '<aside class="side"><div class="card"><h2>Hoy, '+fecha(tk)+'</h2><ul class="agenda">'+ag(tk)+'</ul><h3>Mañana</h3><ul class="agenda">'+ag(mk)+'</ul></div>'+
+  '<div class="card"><h2>Compras</h2><form class="addrow" id="buyf"><input id="buyin" placeholder="Agregar a la lista" autocomplete="off" aria-label="Producto"><button class="primary">Agregar</button></form><ul class="buy">'+
+  S.buy.map(b=>'<li><button data-a="buy" data-id="'+esc(b.id)+'"><span class="box">'+(b.x?'✓':'')+'</span><span class="'+(b.x?'done':'')+'">'+esc(b.t)+'</span></button></li>').join('')+
+  '</ul>'+(S.buy.some(b=>b.x)?'<button class="link" data-a="clean">Quitar los marcados</button> ':'')+'<button class="link" data-a="bk">Respaldo</button></div></aside></main>';
+  setSync();
+}
+function setSync(){}
+function openDay(k,keep){day=k;if(!keep){editId=null;selC='morado';selS=''}renderModal();modal.hidden=false}
+function renderModal(){
+  const e=editId?S.ev.find(x=>x.id===editId):null,l=evsOf(day);
+  modal.innerHTML='<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mt"><div class="sh-h"><h2 id="mt">'+fecha(day)+'</h2><button class="x" data-a="close" aria-label="Cerrar">✕</button></div>'+
+  '<ul class="dlist">'+(l.length?l.map(x=>'<li><button class="chk'+(x.x?' on':'')+'" data-a="done" data-id="'+esc(x.id)+'" aria-label="Marcar como hecho">✓</button><button class="et" data-a="edit" data-id="'+esc(x.id)+'">'+line(x)+'</button><button class="del" data-a="del" data-id="'+esc(x.id)+'">Borrar</button></li>').join(''):'<li class="empty">Nada anotado todavía.</li>')+'</ul>'+
+  '<form id="evf"><div class="f2"><label>'+(e?'Editar':'Anotar')+'<input id="et" autocomplete="off" placeholder="Ej: Reunión de apoderados" value="'+esc(e?e.t:'')+'"></label><label>Hora<input id="eh" type="time" value="'+esc(e&&e.h||'')+'"></label></div>'+
+  '<div class="lab">Color del plumón</div><div class="dots">'+COL.map(c=>'<button type="button" class="dot c-'+c[0]+(c[0]===selC?' sel':'')+'" data-a="color" data-c="'+c[0]+'" aria-label="'+c[1]+'"></button>').join('')+'</div>'+
+  '<div class="lab">Adhesivo</div><div class="stks"><button type="button" class="none'+(!selS?' sel':'')+'" data-a="stk" data-s="">Sin adhesivo</button>'+Object.keys(ST).map(s=>'<button type="button" data-a="stk" data-s="'+s+'" class="'+(s===selS?'sel':'')+'" style="background:'+ST[s][1]+';color:'+ST[s][2]+'">'+ST[s][0]+'</button>').join('')+'</div>'+
+  '<div class="row"><button class="primary" type="submit">'+(e?'Guardar cambios':'Agregar')+'</button>'+(e?'<button type="button" class="ghost" data-a="cancel">Cancelar</button>':'')+'</div></form></div>';
+}
+function closeModal(){modal.hidden=true;modal.innerHTML='';day=null;editId=null}
+function save(){try{localStorage.setItem('calfam',JSON.stringify(S))}catch(e){}}
+function rerender(){render();if(day&&day!=='bk')renderModal()}
+document.addEventListener('click',ev=>{
+  const b=ev.target.closest('[data-a]');if(!b){if(ev.target===modal)closeModal();return}
+  const a=b.dataset.a,id=b.dataset.id;
+  if(a==='prev'||a==='next'){view.m+=a==='next'?1:-1;if(view.m<0){view.m=11;view.y--}if(view.m>11){view.m=0;view.y++}try{sessionStorage.setItem('calfam-view',JSON.stringify(view))}catch(e){}render()}
+  else if(a==='hoy'){const t=new Date();view={y:t.getFullYear(),m:t.getMonth()};try{sessionStorage.removeItem('calfam-view')}catch(e){}render()}
+  else if(a==='open')openDay(b.dataset.d);
+  else if(a==='close')closeModal();
+  else if(a==='color'){selC=b.dataset.c;modal.querySelectorAll('.dot').forEach(d=>d.classList.toggle('sel',d===b))}
+  else if(a==='stk'){selS=b.dataset.s;modal.querySelectorAll('.stks button').forEach(d=>d.classList.toggle('sel',d===b))}
+  else if(a==='done'){const e=S.ev.find(x=>x.id===id);if(e){e.x=!e.x;save();rerender()}}
+  else if(a==='del'){S.ev=S.ev.filter(x=>x.id!==id);if(editId===id)editId=null;save();rerender()}
+  else if(a==='edit'){const e=S.ev.find(x=>x.id===id);if(e){editId=id;selC=col(e.c);selS=ST[e.s]?e.s:'';renderModal();const i=document.getElementById('et');if(i)i.focus()}}
+  else if(a==='cancel'){editId=null;selC='morado';selS='';renderModal()}
+  else if(a==='buy'){const x=S.buy.find(z=>z.id===id);if(x){x.x=!x.x;save();render()}}
+  else if(a==='bk'){day='bk';modal.innerHTML='<div class="sheet" role="dialog" aria-modal="true" aria-labelledby="mt"><div class="sh-h"><h2 id="mt">Respaldo</h2><button class="x" data-a="close" aria-label="Cerrar">✕</button></div><p class="note">Todo queda guardado solo en este equipo. De vez en cuando copia este texto y guárdalo en Notas. Para recuperar, pega aquí un respaldo y toca Restaurar.</p><textarea id="bkt" class="backup" aria-label="Respaldo"></textarea><div class="row"><button type="button" class="ghost" data-a="bksel">Seleccionar todo</button><button type="button" class="primary" data-a="bkres">Restaurar</button></div><p class="note" id="bkm"></p></div>';document.getElementById('bkt').value=JSON.stringify(S);modal.hidden=false}
+  else if(a==='bksel'){const t=document.getElementById('bkt');t.focus();t.setSelectionRange(0,t.value.length)}
+  else if(a==='bkres'){const m=document.getElementById('bkm');try{const v=JSON.parse(document.getElementById('bkt').value);if(!v||!Array.isArray(v.ev)||!Array.isArray(v.buy))throw 0;S=v;save();render();m.textContent='Listo, respaldo restaurado.'}catch(e){m.textContent='Ese texto no es un respaldo válido.'}}
+  else if(a==='clean'){S.buy=S.buy.filter(z=>!z.x);save();render()}
+});
+document.addEventListener('submit',ev=>{
+  ev.preventDefault();
+  if(ev.target.id==='buyf'){const i=document.getElementById('buyin'),t=i.value.trim();if(t){S.buy.push({id:uid(),t:t});save();render();const n=document.getElementById('buyin');if(n)n.focus()}return}
+  if(ev.target.id==='evf'){const t=document.getElementById('et').value.trim(),h=document.getElementById('eh').value;if(!t&&!selS)return;
+    if(editId){const e=S.ev.find(x=>x.id===editId);if(e){e.t=t;e.h=h;e.c=selC;e.s=selS}}else S.ev.push({id:uid(),d:day,t:t,h:h,c:selC,s:selS});
+    editId=null;save();render();renderModal();}
+});
+document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&day)closeModal();else if(!day&&ev.target.tagName!=='INPUT'){if(ev.key==='ArrowLeft')document.querySelector('[data-a=prev]').click();if(ev.key==='ArrowRight')document.querySelector('[data-a=next]').click()}});
+let lastDay=todayK();setInterval(()=>{if(todayK()!==lastDay){lastDay=todayK();render()}},60000);
+render();
+try{const l=JSON.parse(localStorage.getItem('calfam')||'null');if(l&&l.ev)S=l}catch(e){}
+render();
+}</script></body></html>
